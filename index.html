@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>AI Video Translator</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+<body>
+
+
+<header class="header">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            AI
+        </div>
+
+        <span>
+            Video Translator
+        </span>
+
+    </div>
+
+
+    <nav>
+
+        <a href="#translate">
+            Перевод
+        </a>
+
+        <a href="#demo">
+            Демо
+        </a>
+
+        <a href="#how">
+            Как работает
+        </a>
+
+    </nav>
+
+
+    <button
+        class="header-button"
+        id="focusUrl"
+    >
+        Перевести видео
+    </button>
+
+</header>
+
+
+
+<main>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="label">
+            AI VIDEO TRANSLATOR
+        </div>
+
+
+        <h1>
+
+            Переводи зарубежные
+            <span>
+                видео на нужный язык
+            </span>
+
+        </h1>
+
+
+        <p>
+
+            Вставь ссылку на видео.
+            Локальный ИИ распознает речь,
+            переведёт её и создаст новую
+            озвучку.
+
+        </p>
+
+
+        <div class="hero-buttons">
+
+            <a
+                href="#translate"
+                class="primary-button"
+            >
+                Начать перевод
+            </a>
+
+
+            <a
+                href="#demo"
+                class="secondary-button"
+            >
+                Смотреть демо
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="hero-preview">
+
+        <div class="preview-header">
+
+            <span>
+                AI TRANSLATION
+            </span>
+
+            <span class="local-status">
+                ● LOCAL
+            </span>
+
+        </div>
+
+
+        <div class="preview-screen">
+
+            <div class="preview-circle">
+                ▶
+            </div>
+
+
+            <div class="sound-wave"></div>
+
+        </div>
+
+
+        <div class="preview-footer">
+
+            <span>
+                English
+            </span>
+
+            <b>
+                →
+            </b>
+
+            <span>
+                Русский
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+
+<!-- TRANSLATOR -->
+
+<section
+    class="translator"
+    id="translate"
+>
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="label">
+                TRANSLATOR
+            </div>
+
+            <h2>
+                Переведи видео
+            </h2>
+
+        </div>
+
+
+        <span class="local-ai">
+            ● LOCAL AI
+        </span>
+
+    </div>
+
+
+
+
+    <div class="translator-box">
+
+
+        <!-- URL -->
+
+        <div class="url-box">
+
+            <div class="url-icon">
+                ▶
+            </div>
+
+
+            <div class="url-content">
+
+                <label>
+                    Ссылка на YouTube
+                </label>
+
+
+                <input
+                    type="url"
+                    id="youtubeUrl"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                >
+
+            </div>
+
+        </div>
+
+
+
+
+        <!-- LANGUAGE -->
+
+        <div class="language-row">
+
+            <label>
+                Перевести на
+            </label>
+
+
+            <select id="language">
+
+                <option value="ru">
+                    Русский
+                </option>
+
+                <option value="kk">
+                    Қазақша
+                </option>
+
+                <option value="en">
+                    English
+                </option>
+
+                <option value="de">
+                    Deutsch
+                </option>
+
+                <option value="fr">
+                    Français
+                </option>
+
+                <option value="es">
+                    Español
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+
+        <!-- PIPELINE -->
+
+        <div class="pipeline">
+
+
+            <div class="pipeline-item">
+
+                <span>
+                    01
+                </span>
+
+                <strong>
+                    Whisper
+                </strong>
+
+                <small>
+                    Речь → текст
+                </small>
+
+            </div>
+
+
+            <div class="arrow">
+                →
+            </div>
+
+
+            <div class="pipeline-item">
+
+                <span>
+                    02
+                </span>
+
+                <strong>
+                    Translator
+                </strong>
+
+                <small>
+                    Текст → перевод
+                </small>
+
+            </div>
+
+
+            <div class="arrow">
+                →
+            </div>
+
+
+            <div class="pipeline-item">
+
+                <span>
+                    03
+                </span>
+
+                <strong>
+                    Piper TTS
+                </strong>
+
+                <small>
+                    Перевод → голос
+                </small>
+
+            </div>
+
+
+        </div>
+
+
+
+
+        <!-- BUTTON -->
+
+        <button
+            class="translate-button"
+            id="translateButton"
+        >
+            Перевести видео
+        </button>
+
+
+
+
+        <!-- PROGRESS -->
+
+        <div
+            class="progress-area"
+            id="progressArea"
+        >
+
+            <div class="progress-text">
+
+                <span id="progressStatus">
+                    Подготовка...
+                </span>
+
+                <span id="progressPercent">
+                    0%
+                </span>
+
+            </div>
+
+
+            <div class="progress-bar">
+
+                <div
+                    class="progress-fill"
+                    id="progressFill"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+
+
+        <!-- RESULT -->
+
+        <div
+            class="result-area"
+            id="resultArea"
+        >
+
+            <div class="result-title">
+                Видео готово
+            </div>
+
+
+            <video
+                id="resultVideo"
+                controls
+            ></video>
+
+
+            <a
+                id="downloadResult"
+                class="download-button"
+                download
+            >
+                Скачать перевод
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+
+<!-- DEMO -->
+
+<section
+    class="demo-section"
+    id="demo"
+>
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="label">
+                DEMO LIBRARY
+            </div>
+
+            <h2>
+                Тестовые видео
+            </h2>
+
+        </div>
+
+        <span>
+            5 видео
+        </span>
+
+    </div>
+
+
+
+
+    <div class="video-grid">
+
+
+        <article class="video-card">
+
+            <div class="thumbnail">
+
+                <span class="number">
+                    01
+                </span>
+
+                <div class="play-button">
+                    ▶
+                </div>
+
+            </div>
+
+
+            <div class="card-content">
+
+                <h3>
+                    Travel Vlog
+                </h3>
+
+                <p>
+                    Зарубежное путешествие
+                </p>
+
+                <div class="languages">
+                    English → Русский
+                </div>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="video-card">
+
+            <div class="thumbnail">
+
+                <span class="number">
+                    02
+                </span>
+
+                <div class="play-button">
+                    ▶
+                </div>
+
+            </div>
+
+
+            <div class="card-content">
+
+                <h3>
+                    Technology Review
+                </h3>
+
+                <p>
+                    Обзор технологии
+                </p>
+
+                <div class="languages">
+                    English → Русский
+                </div>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="video-card">
+
+            <div class="thumbnail">
+
+                <span class="number">
+                    03
+                </span>
+
+                <div class="play-button">
+                    ▶
+                </div>
+
+            </div>
+
+
+            <div class="card-content">
+
+                <h3>
+                    Street Interview
+                </h3>
+
+                <p>
+                    Уличное интервью
+                </p>
+
+                <div class="languages">
+                    English → Русский
+                </div>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="video-card">
+
+            <div class="thumbnail">
+
+                <span class="number">
+                    04
+                </span>
+
+                <div class="play-button">
+                    ▶
+                </div>
+
+            </div>
+
+
+            <div class="card-content">
+
+                <h3>
+                    Documentary
+                </h3>
+
+                <p>
+                    Документальный фильм
+                </p>
+
+                <div class="languages">
+                    English → Русский
+                </div>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="video-card">
+
+            <div class="thumbnail">
+
+                <span class="number">
+                    05
+                </span>
+
+                <div class="play-button">
+                    ▶
+                </div>
+
+            </div>
+
+
+            <div class="card-content">
+
+                <h3>
+                    Podcast
+                </h3>
+
+                <p>
+                    Фрагмент подкаста
+                </p>
+
+                <div class="languages">
+                    English → Русский
+                </div>
+
+            </div>
+
+        </article>
+
+
+    </div>
+
+</section>
+
+
+
+
+<!-- HOW -->
+
+<section
+    class="how"
+    id="how"
+>
+
+    <div class="label">
+        HOW IT WORKS
+    </div>
+
+
+    <h2>
+        Как работает перевод
+    </h2>
+
+
+    <div class="steps">
+
+
+        <div>
+
+            <span>
+                01
+            </span>
+
+            <strong>
+                Ссылка
+            </strong>
+
+            <p>
+                Вставляешь ссылку
+                на видео.
+            </p>
+
+        </div>
+
+
+
+        <div>
+
+            <span>
+                02
+            </span>
+
+            <strong>
+                AI обработка
+            </strong>
+
+            <p>
+                ИИ распознаёт,
+                переводит и озвучивает.
+            </p>
+
+        </div>
+
+
+
+        <div>
+
+            <span>
+                03
+            </span>
+
+            <strong>
+                Готово
+            </strong>
+
+            <p>
+                Получаешь готовое
+                переведённое видео.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+</main>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
