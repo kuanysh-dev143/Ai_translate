@@ -1,118 +1,152 @@
 const express = require("express");
-
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs");
 
-const { spawn } =
-    require("child_process");
+const { spawn } = require("child_process");
 
 const app = express();
 
 const PORT = 3000;
 
+const ROOT = __dirname;
 
-const ROOT =
-    __dirname;
-
-const TOOLS =
-    path.join(
-        ROOT,
-        "tools"
-    );
+const UPLOADS = path.join(ROOT, "uploads");
+const OUTPUT = path.join(ROOT, "output");
+const PYTHON = path.join(ROOT, "python");
 
 
-const UPLOADS =
-    path.join(
-        ROOT,
-        "uploads"
-    );
+// =====================================================
+// CREATE DIRECTORIES
+// =====================================================
 
-
-const OUTPUT =
-    path.join(
-        ROOT,
-        "output"
-    );
-
-
-const YTDLP =
-    path.join(
-        TOOLS,
-        "yt-dlp.exe"
-    );
-
-
-const FFMPEG =
-    path.join(
-        TOOLS,
-        "ffmpeg.exe"
-    );
-
-
-
-/*
-    Создаём папки
-*/
-
-for (
-    const folder of [
-        TOOLS,
-        UPLOADS,
-        OUTPUT
-    ]
-) {
-
-    if (
-        !fs.existsSync(folder)
-    ) {
-
-        fs.mkdirSync(
-            folder,
-            {
-                recursive: true
-            }
-        );
-
+for (const folder of [
+    UPLOADS,
+    OUTPUT,
+    PYTHON
+]) {
+    if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, {
+            recursive: true
+        });
     }
-
 }
 
 
+// =====================================================
+// MIDDLEWARE
+// =====================================================
 
-/*
-    Статика
-*/
+app.use(express.json({
+    limit: "10mb"
+}));
 
-app.use(
-    express.static(ROOT)
-);
-
-
-app.use(
-    express.json()
-);
+app.use(express.static(ROOT));
 
 
+// =====================================================
+// HOME
+// =====================================================
 
-/*
-    Проверка инструментов
-*/
+app.get("/", (req, res) => {
 
-app.get(
-    "/api/status",
-    (req, res) => {
+    res.sendFile(
+        path.join(ROOT, "index.html")
+    );
+
+});
+
+
+// =====================================================
+// SERVER STATUS
+// =====================================================
+
+app.get("/api/status", (req, res) => {
+
+    res.json({
+
+        server: true,
+
+        name: "QazaqVoice AI",
+
+        mode: "real-time-dubbing",
+
+        status: "ready"
+
+    });
+
+});
+
+
+// =====================================================
+// START DUBBING SESSION
+// =====================================================
+
+app.post(
+    "/api/dubbing/start",
+    async (req, res) => {
+
+        const {
+            language = "kk"
+        } = req.body;
+
+
+        const sessionId =
+            Date.now().toString();
+
+
+        const sessionFolder =
+            path.join(
+                UPLOADS,
+                sessionId
+            );
+
+
+        if (!fs.existsSync(sessionFolder)) {
+
+            fs.mkdirSync(
+                sessionFolder,
+                {
+                    recursive: true
+                }
+            );
+
+        }
+
+
+        console.log("");
+        console.log(
+            "================================="
+        );
+        console.log(
+            "QAZAQVOICE AI"
+        );
+        console.log(
+            "NEW DUBBING SESSION"
+        );
+        console.log(
+            "================================="
+        );
+        console.log(
+            "Session:",
+            sessionId
+        );
+        console.log(
+            "Language:",
+            language
+        );
+        console.log("");
+
 
         res.json({
 
-            ytDlp:
-                fs.existsSync(
-                    YTDLP
-                ),
+            success: true,
 
-            ffmpeg:
-                fs.existsSync(
-                    FFMPEG
-                )
+            sessionId,
+
+            language,
+
+            message:
+                "Dubbing session started"
 
         });
 
@@ -120,82 +154,232 @@ app.get(
 );
 
 
+// =====================================================
+// RECEIVE AUDIO CHUNK
+// =====================================================
 
-/*
-    Запуск команды
-*/
+app.post(
+    "/api/dubbing/audio",
+    async (req, res) => {
 
-function runCommand(
-    command,
-    args,
-    onData
+        try {
+
+            const {
+                sessionId,
+                audio
+            } = req.body;
+
+
+            if (!sessionId) {
+
+                return res
+                    .status(400)
+                    .json({
+                        error:
+                            "sessionId отсутствует"
+                    });
+
+            }
+
+
+            if (!audio) {
+
+                return res
+                    .status(400)
+                    .json({
+                        error:
+                            "audio отсутствует"
+                    });
+
+            }
+
+
+            const sessionFolder =
+                path.join(
+                    UPLOADS,
+                    sessionId
+                );
+
+
+            if (!fs.existsSync(
+                sessionFolder
+            )) {
+
+                fs.mkdirSync(
+                    sessionFolder,
+                    {
+                        recursive: true
+                    }
+                );
+
+            }
+
+
+            /*
+             * Browser жіберген
+             * Base64 audio
+             */
+
+            const buffer =
+                Buffer.from(
+                    audio,
+                    "base64"
+                );
+
+
+            const filename =
+                `${Date.now()}.webm`;
+
+
+            const audioPath =
+                path.join(
+                    sessionFolder,
+                    filename
+                );
+
+
+            fs.writeFileSync(
+                audioPath,
+                buffer
+            );
+
+
+            console.log(
+                "Audio chunk:",
+                filename
+            );
+
+
+            /*
+             * Кейін осы жерде Python
+             * Whisper pipeline шақырылады.
+             */
+
+
+            res.json({
+
+                success: true,
+
+                received: true,
+
+                file: filename
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            res
+                .status(500)
+                .json({
+
+                    error:
+                        error.message
+
+                });
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// RUN PYTHON AI
+// =====================================================
+
+function runPython(
+    script,
+    args = []
 ) {
 
     return new Promise(
         (resolve, reject) => {
 
-            const process =
+            const pythonProcess =
                 spawn(
-                    command,
-                    args,
+                    "python",
+                    [
+                        script,
+                        ...args
+                    ],
                     {
+                        cwd: ROOT,
                         windowsHide: true
                     }
                 );
 
 
-            let stderr = "";
+            let output = "";
+
+            let errorOutput = "";
 
 
-            process.stdout.on(
+            pythonProcess.stdout.on(
                 "data",
-                (data) => {
+                data => {
 
-                    onData?.(
-                        data.toString()
-                    );
-
-                }
-            );
-
-
-            process.stderr.on(
-                "data",
-                (data) => {
-
-                    stderr +=
+                    const text =
                         data.toString();
 
-                    onData?.(
-                        data.toString()
+                    output += text;
+
+                    console.log(
+                        "[PYTHON]",
+                        text.trim()
                     );
 
                 }
             );
 
 
-            process.on(
-                "error",
-                reject
+            pythonProcess.stderr.on(
+                "data",
+                data => {
+
+                    const text =
+                        data.toString();
+
+                    errorOutput += text;
+
+                    console.error(
+                        "[PYTHON ERROR]",
+                        text.trim()
+                    );
+
+                }
             );
 
 
-            process.on(
+            pythonProcess.on(
+                "error",
+                error => {
+
+                    reject(error);
+
+                }
+            );
+
+
+            pythonProcess.on(
                 "close",
-                (code) => {
+                code => {
 
-                    if (
-                        code === 0
-                    ) {
+                    if (code === 0) {
 
-                        resolve();
+                        resolve(output);
 
-                    } else {
+                    }
+
+                    else {
 
                         reject(
                             new Error(
-                                stderr ||
-                                `Process exited with code ${code}`
+                                errorOutput ||
+                                `Python exited with code ${code}`
                             )
                         );
 
@@ -206,285 +390,73 @@ function runCommand(
 
         }
     );
+
 }
 
 
+// =====================================================
+// TEST PYTHON CONNECTION
+// =====================================================
 
-/*
-    YouTube → файл
-*/
-
-app.post(
-    "/api/translate",
+app.get(
+    "/api/python/status",
     async (req, res) => {
-
-        const {
-            url,
-            language
-        } = req.body;
-
-
-        if (!url) {
-
-            return res
-                .status(400)
-                .json({
-                    error:
-                        "YouTube ссылка отсутствует"
-                });
-
-        }
-
-
-        if (
-            !fs.existsSync(
-                YTDLP
-            )
-        ) {
-
-            return res
-                .status(500)
-                .json({
-
-                    error:
-                        "Не найден tools/yt-dlp.exe"
-
-                });
-
-        }
-
-
-        res.setHeader(
-            "Content-Type",
-            "text/event-stream"
-        );
-
-        res.setHeader(
-            "Cache-Control",
-            "no-cache"
-        );
-
-        res.setHeader(
-            "Connection",
-            "keep-alive"
-        );
-
-
-        const send =
-            (
-                status,
-                progress
-            ) => {
-
-                res.write(
-                    `data: ${JSON.stringify({
-                        status,
-                        progress
-                    })}\n\n`
-                );
-
-            };
-
 
         try {
 
-            /*
-                Уникальное имя
-            */
-
-            const id =
-                Date.now();
-
-
-            const outputTemplate =
+            const script =
                 path.join(
-                    UPLOADS,
-                    `${id}.%(ext)s`
+                    PYTHON,
+                    "test.py"
                 );
 
 
-            send(
-                "Загрузка видео с YouTube...",
-                10
-            );
+            if (!fs.existsSync(script)) {
 
+                return res.json({
 
-            /*
-                yt-dlp
-            */
+                    python: true,
 
-            await runCommand(
-                YTDLP,
-                [
-                    "--no-playlist",
+                    script: false,
 
-                    "-f",
-                    "bv*+ba/b",
+                    message:
+                        "python/test.py пока отсутствует"
 
-                    "--merge-output-format",
-                    "mp4",
-
-                    "-o",
-                    outputTemplate,
-
-                    url
-                ],
-                (text) => {
-
-                    if (
-                        text.includes(
-                            "[download]"
-                        )
-                    ) {
-
-                        const match =
-                            text.match(
-                                /(\d+(?:\.\d+)?)%/
-                            );
-
-
-                        if (
-                            match
-                        ) {
-
-                            const percent =
-                                Number(
-                                    match[1]
-                                );
-
-
-                            send(
-                                "Загрузка видео...",
-                                Math.min(
-                                    45,
-                                    Math.round(
-                                        percent *
-                                        0.45
-                                    )
-                                )
-                            );
-
-                        }
-
-                    }
-
-                }
-            );
-
-
-            /*
-                Ищем полученный MP4
-            */
-
-            const files =
-                fs.readdirSync(
-                    UPLOADS
-                );
-
-
-            const downloaded =
-                files.find(
-                    file =>
-                        file.startsWith(
-                            String(id)
-                        )
-                );
-
-
-            if (!downloaded) {
-
-                throw new Error(
-                    "Видео не найдено после загрузки"
-                );
+                });
 
             }
 
 
-            const source =
-                path.join(
-                    UPLOADS,
-                    downloaded
+            const result =
+                await runPython(
+                    script
                 );
 
 
-            /*
-                ВРЕМЕННО:
+            res.json({
 
-                здесь будет Whisper
-            */
+                python: true,
 
-            send(
-                "Видео загружено. Следующий этап — Whisper...",
-                55
-            );
+                script: true,
 
+                result
 
-            /*
-                Пока создаём копию
-                как тест результата.
-            */
+            });
 
-            const output =
-                path.join(
-                    OUTPUT,
-                    `${id}-${language}.mp4`
-                );
+        }
 
+        catch (error) {
 
-            fs.copyFileSync(
-                source,
-                output
-            );
+            res
+                .status(500)
+                .json({
 
+                    python: false,
 
-            send(
-                "Видео подготовлено...",
-                90
-            );
+                    error:
+                        error.message
 
-
-            /*
-                Сейчас просто
-                показываем полученное видео.
-            */
-
-            send(
-                "Готово",
-                100
-            );
-
-
-            res.write(
-                `data: ${JSON.stringify({
-                    completed: true,
-                    video:
-                        `/output/${path.basename(output)}`
-                })}\n\n`
-            );
-
-
-            res.end();
-
-        } catch (
-            error
-        ) {
-
-            console.error(
-                error
-            );
-
-
-            res.write(
-                `data: ${JSON.stringify({
-                    status:
-                        "Ошибка: " +
-                        error.message,
-                    progress: 0
-                })}\n\n`
-            );
-
-
-            res.end();
+                });
 
         }
 
@@ -492,37 +464,112 @@ app.post(
 );
 
 
+// =====================================================
+// STOP SESSION
+// =====================================================
 
-/*
-    SERVER
-*/
+app.post(
+    "/api/dubbing/stop",
+    (req, res) => {
+
+        const {
+            sessionId
+        } = req.body;
+
+
+        if (!sessionId) {
+
+            return res
+                .status(400)
+                .json({
+
+                    error:
+                        "sessionId отсутствует"
+
+                });
+
+        }
+
+
+        console.log(
+            "Dubbing stopped:",
+            sessionId
+        );
+
+
+        res.json({
+
+            success: true,
+
+            sessionId,
+
+            message:
+                "Dubbing session stopped"
+
+        });
+
+    }
+);
+
+
+// =====================================================
+// ERROR HANDLER
+// =====================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(err);
+
+        res
+            .status(500)
+            .json({
+
+                error:
+                    err.message ||
+                    "Server error"
+
+            });
+
+    }
+);
+
+
+// =====================================================
+// START SERVER
+// =====================================================
 
 app.listen(
     PORT,
     () => {
 
+        console.log("");
         console.log(
-            ""
+            "================================="
         );
-
         console.log(
-            "================================"
+            "       QAZAQVOICE AI"
         );
-
         console.log(
-            "AI VIDEO TRANSLATOR"
+            "   REAL-TIME VIDEO DUBBING"
         );
-
         console.log(
-            "================================"
+            "================================="
         );
-
+        console.log("");
         console.log(
-            `http://localhost:${PORT}`
+            `Server: http://localhost:${PORT}`
         );
-
+        console.log("");
         console.log(
-            ""
+            "Mode: Browser Audio Capture"
+        );
+        console.log(
+            "AI: Python / Whisper"
+        );
+        console.log("");
+        console.log(
+            "================================="
         );
 
     }
