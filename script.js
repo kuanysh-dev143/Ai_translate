@@ -2,8 +2,13 @@
 // QAZAQVOICE AI - REAL-TIME VIDEO DUBBING
 // =====================================================
 
-const startButton = document.getElementById("startDubbing");
-const stopButton = document.getElementById("stopDubbing");
+// Батырмаларды кез келген тәсілмен табу (ID немесе класс бойынша)
+const startButton = document.getElementById("startDubbing") || 
+                    document.querySelector(".btn-start") || 
+                    document.querySelector("button");
+
+const stopButton = document.getElementById("stopDubbing") || 
+                   document.querySelector(".btn-stop");
 const languageSelect = document.getElementById("language");
 const statusElement = document.getElementById("captureStatus");
 const livePanel = document.getElementById("livePanel");
