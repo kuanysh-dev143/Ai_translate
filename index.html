@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -9,28 +8,844 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>AI Video Translator</title>
-
-    <link
-        rel="stylesheet"
-        href="style.css"
+    <meta
+        name="description"
+        content="QazaqVoice AI — real-time video dubbing"
     >
 
+    <title>QazaqVoice AI — Real-Time Dubbing</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #08090d;
+            color: #f5f5f7;
+            min-height: 100vh;
+        }
+
+        button,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+            height: 76px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 6%;
+
+            border-bottom: 1px solid #20222a;
+
+            background: rgba(8, 9, 13, 0.92);
+
+            position: sticky;
+            top: 0;
+            z-index: 100;
+
+            backdrop-filter: blur(20px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 11px;
+
+            background: #ffffff;
+            color: #08090d;
+
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #9a9da8;
+            text-decoration: none;
+            font-size: 14px;
+
+            transition: 0.2s;
+        }
+
+        nav a:hover {
+            color: white;
+        }
+
+        .header-button {
+            border: 0;
+            background: white;
+            color: #08090d;
+
+            padding: 11px 18px;
+            border-radius: 9px;
+
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
+
+        .hero {
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding:
+                110px 30px
+                100px;
+
+            display: grid;
+            grid-template-columns:
+                1.05fr
+                0.95fr;
+
+            gap: 80px;
+
+            align-items: center;
+        }
+
+        .label {
+            display: inline-flex;
+
+            padding: 7px 11px;
+
+            border: 1px solid #292c35;
+            border-radius: 100px;
+
+            color: #a9adb9;
+
+            font-size: 10px;
+            font-weight: 800;
+
+            letter-spacing: 1.5px;
+        }
+
+        .hero h1 {
+            margin-top: 25px;
+
+            font-size:
+                clamp(42px, 5vw, 72px);
+
+            line-height: 1.02;
+
+            letter-spacing: -3px;
+        }
+
+        .hero h1 span {
+            color: #777b87;
+        }
+
+        .hero-description {
+            max-width: 620px;
+
+            margin-top: 25px;
+
+            color: #9a9da8;
+
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+
+            margin-top: 35px;
+        }
+
+        .primary-button,
+        .secondary-button {
+            padding: 14px 20px;
+
+            border-radius: 10px;
+
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .primary-button {
+            background: white;
+            color: #08090d;
+        }
+
+        .secondary-button {
+            border: 1px solid #30333c;
+            color: #e5e7eb;
+        }
+
+        /* =========================
+           HERO PREVIEW
+        ========================= */
+
+        .preview {
+            border: 1px solid #272a33;
+            border-radius: 20px;
+
+            background: #101116;
+
+            padding: 16px;
+
+            box-shadow:
+                0 30px 80px
+                rgba(0, 0, 0, 0.45);
+        }
+
+        .preview-top {
+            display: flex;
+            justify-content: space-between;
+
+            padding: 5px 5px 14px;
+
+            color: #858995;
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .online {
+            color: #68e391;
+        }
+
+        .preview-screen {
+            height: 280px;
+
+            border-radius: 13px;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    #242832 0%,
+                    #111319 45%,
+                    #090a0d 100%
+                );
+
+            display: flex;
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-play {
+            width: 74px;
+            height: 74px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: white;
+            color: black;
+
+            font-size: 25px;
+
+            padding-left: 4px;
+        }
+
+        .wave {
+            margin-top: 25px;
+
+            width: 220px;
+            height: 35px;
+
+            background:
+                repeating-linear-gradient(
+                    90deg,
+                    #555a67 0px,
+                    #555a67 3px,
+                    transparent 3px,
+                    transparent 8px
+                );
+
+            opacity: 0.7;
+        }
+
+        .preview-bottom {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+
+            padding-top: 15px;
+
+            color: #b4b7c1;
+
+            font-size: 13px;
+        }
+
+        .preview-bottom strong {
+            color: white;
+        }
+
+        /* =========================
+           MAIN TRANSLATOR
+        ========================= */
+
+        .translator-section {
+            max-width: 1050px;
+
+            margin: auto;
+
+            padding:
+                30px
+                80px
+                120px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            margin-top: 12px;
+
+            font-size: 35px;
+            letter-spacing: -1.5px;
+        }
+
+        .local-ai {
+            color: #68e391;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            letter-spacing: 1px;
+        }
+
+        /* =========================
+           CAPTURE BOX
+        ========================= */
+
+        .translator-box {
+            border: 1px solid #292c35;
+
+            background: #101116;
+
+            border-radius: 20px;
+
+            padding: 30px;
+        }
+
+        .capture-box {
+            display: flex;
+            align-items: center;
+
+            gap: 20px;
+
+            padding: 22px;
+
+            border: 1px solid #292c35;
+            border-radius: 15px;
+
+            background: #0c0d11;
+        }
+
+        .capture-icon {
+            width: 58px;
+            height: 58px;
+
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 15px;
+
+            background: #20232b;
+
+            font-size: 25px;
+        }
+
+        .capture-content h3 {
+            font-size: 17px;
+        }
+
+        .capture-content p {
+            margin-top: 7px;
+
+            color: #858995;
+
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* =========================
+           LANGUAGE
+        ========================= */
+
+        .language-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-top: 18px;
+
+            padding: 17px 20px;
+
+            border: 1px solid #292c35;
+            border-radius: 13px;
+        }
+
+        .language-row label {
+            color: #aeb1ba;
+
+            font-size: 13px;
+        }
+
+        .language-row select {
+            min-width: 180px;
+
+            padding: 10px 13px;
+
+            border: 1px solid #343741;
+            border-radius: 9px;
+
+            background: #181a20;
+            color: white;
+
+            outline: none;
+        }
+
+        /* =========================
+           PIPELINE
+        ========================= */
+
+        .pipeline {
+            display: grid;
+
+            grid-template-columns:
+                1fr
+                auto
+                1fr
+                auto
+                1fr
+                auto
+                1fr;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin-top: 25px;
+        }
+
+        .pipeline-item {
+            min-height: 120px;
+
+            padding: 18px;
+
+            border: 1px solid #292c35;
+            border-radius: 13px;
+
+            background: #0c0d11;
+        }
+
+        .pipeline-item span {
+            display: block;
+
+            color: #686c78;
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .pipeline-item strong {
+            display: block;
+
+            margin-top: 15px;
+
+            font-size: 14px;
+        }
+
+        .pipeline-item small {
+            display: block;
+
+            margin-top: 6px;
+
+            color: #737783;
+
+            font-size: 11px;
+        }
+
+        .pipeline-arrow {
+            color: #666a76;
+
+            font-size: 20px;
+        }
+
+        /* =========================
+           STATUS
+        ========================= */
+
+        .status {
+            margin-top: 25px;
+
+            padding: 14px 18px;
+
+            border-radius: 10px;
+
+            background: #0b0c10;
+
+            border: 1px solid #252832;
+
+            color: #858995;
+
+            font-size: 13px;
+        }
+
+        .status.active {
+            color: #68e391;
+
+            border-color: #285b38;
+        }
+
+        .status.error {
+            color: #ff7474;
+
+            border-color: #642c2c;
+        }
+
+        /* =========================
+           BUTTONS
+        ========================= */
+
+        .start-button,
+        .stop-button {
+            width: 100%;
+
+            margin-top: 18px;
+
+            padding: 17px;
+
+            border-radius: 11px;
+
+            border: 0;
+
+            font-weight: 800;
+
+            transition:
+                transform 0.2s,
+                opacity 0.2s;
+        }
+
+        .start-button {
+            background: white;
+            color: #08090d;
+        }
+
+        .stop-button {
+            background: #2b2d35;
+            color: white;
+        }
+
+        .start-button:hover,
+        .stop-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .start-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* =========================
+           LIVE PANEL
+        ========================= */
+
+        .live-panel {
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 20px;
+
+            border: 1px solid #292c35;
+            border-radius: 13px;
+
+            background: #0b0c10;
+        }
+
+        .live-panel.active {
+            display: block;
+        }
+
+        .live-header {
+            display: flex;
+            justify-content: space-between;
+
+            margin-bottom: 18px;
+        }
+
+        .live-title {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .live-dot {
+            display: inline-block;
+
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #ff4d4d;
+
+            margin-right: 7px;
+
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+
+        }
+
+        .transcript {
+            min-height: 70px;
+
+            padding: 15px;
+
+            border-radius: 9px;
+
+            background: #14161c;
+
+            color: #aeb1ba;
+
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .translated {
+            margin-top: 10px;
+
+            color: white;
+        }
+
+        /* =========================
+           HOW
+        ========================= */
+
+        .how-section {
+            max-width: 1050px;
+
+            margin: auto;
+
+            padding:
+                50px
+                30px
+                120px;
+        }
+
+        .how-section h2 {
+            margin-top: 15px;
+
+            font-size: 35px;
+            letter-spacing: -1px;
+        }
+
+        .steps {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+
+            margin-top: 30px;
+        }
+
+        .step {
+            padding: 25px;
+
+            min-height: 180px;
+
+            border: 1px solid #292c35;
+            border-radius: 15px;
+
+            background: #101116;
+        }
+
+        .step-number {
+            color: #666a76;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .step h3 {
+            margin-top: 25px;
+
+            font-size: 17px;
+        }
+
+        .step p {
+            margin-top: 8px;
+
+            color: #858995;
+
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            border-top: 1px solid #20222a;
+
+            padding: 30px 6%;
+
+            color: #656874;
+
+            font-size: 12px;
+
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 850px) {
+
+            nav {
+                display: none;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+
+                gap: 45px;
+
+                padding-top: 70px;
+            }
+
+            .pipeline {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline-arrow {
+                display: none;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .language-row {
+                flex-direction: column;
+
+                align-items: stretch;
+
+                gap: 12px;
+            }
+
+            .language-row select {
+                width: 100%;
+            }
+
+            footer {
+                flex-direction: column;
+
+                gap: 10px;
+            }
+
+        }
+
+    </style>
 </head>
+
 
 <body>
 
+
+<!-- =========================
+     HEADER
+========================= -->
 
 <header class="header">
 
     <div class="logo">
 
         <div class="logo-icon">
-            AI
+            QV
         </div>
 
         <span>
-            Video Translator
+            QazaqVoice AI
         </span>
 
     </div>
@@ -38,12 +853,8 @@
 
     <nav>
 
-        <a href="#translate">
-            Перевод
-        </a>
-
-        <a href="#demo">
-            Демо
+        <a href="#translator">
+            Дубляж
         </a>
 
         <a href="#how">
@@ -53,12 +864,12 @@
     </nav>
 
 
-    <button
+    <a
+        href="#translator"
         class="header-button"
-        id="focusUrl"
     >
-        Перевести видео
-    </button>
+        Начать
+    </a>
 
 </header>
 
@@ -67,33 +878,36 @@
 <main>
 
 
-<!-- HERO -->
+<!-- =========================
+     HERO
+========================= -->
 
 <section class="hero">
 
-    <div class="hero-content">
+    <div>
 
         <div class="label">
-            AI VIDEO TRANSLATOR
+            REAL-TIME AI DUBBING
         </div>
 
 
         <h1>
 
-            Переводи зарубежные
+            Смотри видео
             <span>
-                видео на нужный язык
+                на своём языке
             </span>
 
         </h1>
 
 
-        <p>
+        <p class="hero-description">
 
-            Вставь ссылку на видео.
-            Локальный ИИ распознает речь,
-            переведёт её и создаст новую
-            озвучку.
+            QazaqVoice AI слушает речь в видео,
+            распознаёт её, переводит и создаёт
+            дубляж на выбранном языке.
+
+            Без скачивания видео.
 
         </p>
 
@@ -101,18 +915,18 @@
         <div class="hero-buttons">
 
             <a
-                href="#translate"
+                href="#translator"
                 class="primary-button"
             >
-                Начать перевод
+                🔴 Начать дубляж
             </a>
 
 
             <a
-                href="#demo"
+                href="#how"
                 class="secondary-button"
             >
-                Смотреть демо
+                Как это работает
             </a>
 
         </div>
@@ -121,16 +935,16 @@
 
 
 
-    <div class="hero-preview">
+    <div class="preview">
 
-        <div class="preview-header">
+        <div class="preview-top">
 
             <span>
-                AI TRANSLATION
+                QAZAQVOICE AI
             </span>
 
-            <span class="local-status">
-                ● LOCAL
+            <span class="online">
+                ● READY
             </span>
 
         </div>
@@ -138,28 +952,27 @@
 
         <div class="preview-screen">
 
-            <div class="preview-circle">
+            <div class="preview-play">
                 ▶
             </div>
 
-
-            <div class="sound-wave"></div>
+            <div class="wave"></div>
 
         </div>
 
 
-        <div class="preview-footer">
+        <div class="preview-bottom">
 
             <span>
                 English
             </span>
 
-            <b>
+            <strong>
                 →
-            </b>
+            </strong>
 
             <span>
-                Русский
+                Қазақша
             </span>
 
         </div>
@@ -170,12 +983,13 @@
 
 
 
-
-<!-- TRANSLATOR -->
+<!-- =========================
+     TRANSLATOR
+========================= -->
 
 <section
-    class="translator"
-    id="translate"
+    class="translator-section"
+    id="translator"
 >
 
     <div class="section-header">
@@ -183,54 +997,51 @@
         <div>
 
             <div class="label">
-                TRANSLATOR
+                LIVE TRANSLATOR
             </div>
 
             <h2>
-                Переведи видео
+                Real-Time дубляж
             </h2>
 
         </div>
 
 
-        <span class="local-ai">
-            ● LOCAL AI
-        </span>
+        <div class="local-ai">
+            ● AI READY
+        </div>
 
     </div>
-
 
 
 
     <div class="translator-box">
 
 
-        <!-- URL -->
+        <!-- CAPTURE -->
 
-        <div class="url-box">
+        <div class="capture-box">
 
-            <div class="url-icon">
-                ▶
+            <div class="capture-icon">
+                🎙️
             </div>
 
 
-            <div class="url-content">
+            <div class="capture-content">
 
-                <label>
-                    Ссылка на YouTube
-                </label>
+                <h3>
+                    Экрандағы видеоны дубляждау
+                </h3>
 
-
-                <input
-                    type="url"
-                    id="youtubeUrl"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                >
+                <p>
+                    YouTube немесе басқа видеоны ашыңыз.
+                    «Начать дубляж» батырмасын басып,
+                    видео тұрған вкладканы таңдаңыз.
+                </p>
 
             </div>
 
         </div>
-
 
 
 
@@ -239,40 +1050,39 @@
         <div class="language-row">
 
             <label>
-                Перевести на
+                Дубляж тілі
             </label>
 
 
             <select id="language">
 
-                <option value="ru">
-                    Русский
+                <option value="kk">
+                    🇰🇿 Қазақша
                 </option>
 
-                <option value="kk">
-                    Қазақша
+                <option value="ru">
+                    🇷🇺 Русский
                 </option>
 
                 <option value="en">
-                    English
+                    🇬🇧 English
                 </option>
 
                 <option value="de">
-                    Deutsch
+                    🇩🇪 Deutsch
                 </option>
 
                 <option value="fr">
-                    Français
+                    🇫🇷 Français
                 </option>
 
                 <option value="es">
-                    Español
+                    🇪🇸 Español
                 </option>
 
             </select>
 
         </div>
-
 
 
 
@@ -288,445 +1098,26 @@
                 </span>
 
                 <strong>
+                    Audio Capture
+                </strong>
+
+                <small>
+                    Видео дыбысы
+                </small>
+
+            </div>
+
+
+            <div class="pipeline-arrow">
+                →
+            </div>
+
+
+            <div class="pipeline-item">
+
+                <span>
+                    02
+                </span>
+
+                <strong>
                     Whisper
-                </strong>
-
-                <small>
-                    Речь → текст
-                </small>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="pipeline-item">
-
-                <span>
-                    02
-                </span>
-
-                <strong>
-                    Translator
-                </strong>
-
-                <small>
-                    Текст → перевод
-                </small>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="pipeline-item">
-
-                <span>
-                    03
-                </span>
-
-                <strong>
-                    Piper TTS
-                </strong>
-
-                <small>
-                    Перевод → голос
-                </small>
-
-            </div>
-
-
-        </div>
-
-
-
-
-        <!-- BUTTON -->
-
-        <button
-            class="translate-button"
-            id="translateButton"
-        >
-            Перевести видео
-        </button>
-
-
-
-
-        <!-- PROGRESS -->
-
-        <div
-            class="progress-area"
-            id="progressArea"
-        >
-
-            <div class="progress-text">
-
-                <span id="progressStatus">
-                    Подготовка...
-                </span>
-
-                <span id="progressPercent">
-                    0%
-                </span>
-
-            </div>
-
-
-            <div class="progress-bar">
-
-                <div
-                    class="progress-fill"
-                    id="progressFill"
-                ></div>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- RESULT -->
-
-        <div
-            class="result-area"
-            id="resultArea"
-        >
-
-            <div class="result-title">
-                Видео готово
-            </div>
-
-
-            <video
-                id="resultVideo"
-                controls
-            ></video>
-
-
-            <a
-                id="downloadResult"
-                class="download-button"
-                download
-            >
-                Скачать перевод
-            </a>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-
-
-<!-- DEMO -->
-
-<section
-    class="demo-section"
-    id="demo"
->
-
-    <div class="section-header">
-
-        <div>
-
-            <div class="label">
-                DEMO LIBRARY
-            </div>
-
-            <h2>
-                Тестовые видео
-            </h2>
-
-        </div>
-
-        <span>
-            5 видео
-        </span>
-
-    </div>
-
-
-
-
-    <div class="video-grid">
-
-
-        <article class="video-card">
-
-            <div class="thumbnail">
-
-                <span class="number">
-                    01
-                </span>
-
-                <div class="play-button">
-                    ▶
-                </div>
-
-            </div>
-
-
-            <div class="card-content">
-
-                <h3>
-                    Travel Vlog
-                </h3>
-
-                <p>
-                    Зарубежное путешествие
-                </p>
-
-                <div class="languages">
-                    English → Русский
-                </div>
-
-            </div>
-
-        </article>
-
-
-
-        <article class="video-card">
-
-            <div class="thumbnail">
-
-                <span class="number">
-                    02
-                </span>
-
-                <div class="play-button">
-                    ▶
-                </div>
-
-            </div>
-
-
-            <div class="card-content">
-
-                <h3>
-                    Technology Review
-                </h3>
-
-                <p>
-                    Обзор технологии
-                </p>
-
-                <div class="languages">
-                    English → Русский
-                </div>
-
-            </div>
-
-        </article>
-
-
-
-        <article class="video-card">
-
-            <div class="thumbnail">
-
-                <span class="number">
-                    03
-                </span>
-
-                <div class="play-button">
-                    ▶
-                </div>
-
-            </div>
-
-
-            <div class="card-content">
-
-                <h3>
-                    Street Interview
-                </h3>
-
-                <p>
-                    Уличное интервью
-                </p>
-
-                <div class="languages">
-                    English → Русский
-                </div>
-
-            </div>
-
-        </article>
-
-
-
-        <article class="video-card">
-
-            <div class="thumbnail">
-
-                <span class="number">
-                    04
-                </span>
-
-                <div class="play-button">
-                    ▶
-                </div>
-
-            </div>
-
-
-            <div class="card-content">
-
-                <h3>
-                    Documentary
-                </h3>
-
-                <p>
-                    Документальный фильм
-                </p>
-
-                <div class="languages">
-                    English → Русский
-                </div>
-
-            </div>
-
-        </article>
-
-
-
-        <article class="video-card">
-
-            <div class="thumbnail">
-
-                <span class="number">
-                    05
-                </span>
-
-                <div class="play-button">
-                    ▶
-                </div>
-
-            </div>
-
-
-            <div class="card-content">
-
-                <h3>
-                    Podcast
-                </h3>
-
-                <p>
-                    Фрагмент подкаста
-                </p>
-
-                <div class="languages">
-                    English → Русский
-                </div>
-
-            </div>
-
-        </article>
-
-
-    </div>
-
-</section>
-
-
-
-
-<!-- HOW -->
-
-<section
-    class="how"
-    id="how"
->
-
-    <div class="label">
-        HOW IT WORKS
-    </div>
-
-
-    <h2>
-        Как работает перевод
-    </h2>
-
-
-    <div class="steps">
-
-
-        <div>
-
-            <span>
-                01
-            </span>
-
-            <strong>
-                Ссылка
-            </strong>
-
-            <p>
-                Вставляешь ссылку
-                на видео.
-            </p>
-
-        </div>
-
-
-
-        <div>
-
-            <span>
-                02
-            </span>
-
-            <strong>
-                AI обработка
-            </strong>
-
-            <p>
-                ИИ распознаёт,
-                переводит и озвучивает.
-            </p>
-
-        </div>
-
-
-
-        <div>
-
-            <span>
-                03
-            </span>
-
-            <strong>
-                Готово
-            </strong>
-
-            <p>
-                Получаешь готовое
-                переведённое видео.
-            </p>
-
-        </div>
-
-
-    </div>
-
-</section>
-
-
-</main>
-
-
-<script src="script.js"></script>
-
-</body>
-</html>
