@@ -1,0 +1,194 @@
+import sys
+import json
+import os
+import subprocess
+import tempfile
+
+from faster_whisper import WhisperModel
+
+
+MODEL_SIZE = "small"
+DEVICE = "cpu"
+COMPUTE_TYPE = "int8"
+
+
+print(json.dumps({
+    "status": "loading_model",
+    "message": "Whisper model loading..."
+}), flush=True)
+
+
+model = WhisperModel(
+    MODEL_SIZE,
+    device=DEVICE,
+    compute_type=COMPUTE_TYPE
+)
+
+
+print(json.dumps({
+    "status": "ready",
+    "message": "Whisper ready"
+}), flush=True)
+
+
+def convert_to_wav(input_file):
+
+    output_file = os.path.join(
+        tempfile.gettempdir(),
+        f"qazaqvoice_{os.getpid()}.wav"
+    )
+
+    command = [
+        "ffmpeg",
+        "-y",
+        "-i",
+        input_file,
+        "-vn",
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-c:a",
+        "pcm_s16le",
+        output_file
+    ]
+
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            result.stderr.decode(
+                errors="ignore"
+            )
+        )
+
+    return output_file
+
+
+def transcribe(audio_file):
+
+    segments, info = model.transcribe(
+        audio_file,
+        beam_size=5,
+        vad_filter=True
+    )
+
+    result_segments = []
+    full_text = []
+
+    for segment in segments:
+
+        text = segment.text.strip()
+
+        if not text:
+            continue
+
+        result_segments.append({
+            "start": round(segment.start, 2),
+            "end": round(segment.end, 2),
+            "text": text
+        })
+
+        full_text.append(text)
+
+        print(json.dumps({
+            "status": "transcribing",
+            "text": text,
+            "start": segment.start,
+            "end": segment.end
+        }, ensure_ascii=False), flush=True)
+
+    return {
+        "language": info.language,
+        "language_probability": info.language_probability,
+        "text": " ".join(full_text),
+        "segments": result_segments
+    }
+
+
+def main():
+
+    if len(sys.argv) < 2:
+
+        print(json.dumps({
+            "status": "error",
+            "error": "Audio file not specified"
+        }), flush=True)
+
+        sys.exit(1)
+
+
+    input_file = sys.argv[1]
+
+
+    if not os.path.exists(input_file):
+
+        print(json.dumps({
+            "status": "error",
+            "error": "File not found"
+        }), flush=True)
+
+        sys.exit(1)
+
+
+    wav_file = None
+
+
+    try:
+
+        print(json.dumps({
+            "status": "converting",
+            "message": "Converting audio..."
+        }), flush=True)
+
+
+        wav_file = convert_to_wav(
+            input_file
+        )
+
+
+        print(json.dumps({
+            "status": "transcribing",
+            "message": "Whisper is listening..."
+        }), flush=True)
+
+
+        result = transcribe(
+            wav_file
+        )
+
+
+        print(json.dumps({
+            "status": "completed",
+            "result": result
+        }, ensure_ascii=False), flush=True)
+
+
+    except Exception as error:
+
+        print(json.dumps({
+            "status": "error",
+            "error": str(error)
+        }, ensure_ascii=False), flush=True)
+
+        sys.exit(1)
+
+
+    finally:
+
+        if wav_file and os.path.exists(
+            wav_file
+        ):
+
+            try:
+                os.remove(wav_file)
+            except:
+                pass
+
+
+if __name__ == "__main__":
+    main()
