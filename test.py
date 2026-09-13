@@ -17,8 +17,15 @@ segments, info = model.transcribe(
 
 print("Тіл:", info.language)
 
+full_text = ""
+
 for segment in segments:
-    print(
-        f"[{segment.start:.2f} - {segment.end:.2f}] "
-        f"{segment.text}"
-    )
+    line = f"[{segment.start:.2f} - {segment.end:.2f}] {segment.text}"
+    print(line)
+    full_text += segment.text + " "
+
+# Айналған мәтінді файлға сақтаймыз
+with open("result.txt", "w", encoding="utf-8") as f:
+    f.write(full_text.strip())
+
+print("Мәтін result.txt файлына сәтті сақталды!")
