@@ -1,319 +1,797 @@
-const youtubeUrl =
-    document.getElementById(
-        "youtubeUrl"
-    );
-
-const language =
-    document.getElementById(
-        "language"
-    );
-
-const translateButton =
-    document.getElementById(
-        "translateButton"
-    );
-
-const progressArea =
-    document.getElementById(
-        "progressArea"
-    );
-
-const progressFill =
-    document.getElementById(
-        "progressFill"
-    );
-
-const progressStatus =
-    document.getElementById(
-        "progressStatus"
-    );
-
-const progressPercent =
-    document.getElementById(
-        "progressPercent"
-    );
-
-const resultArea =
-    document.getElementById(
-        "resultArea"
-    );
-
-const resultVideo =
-    document.getElementById(
-        "resultVideo"
-    );
-
-const downloadResult =
-    document.getElementById(
-        "downloadResult"
-    );
-
-const focusUrl =
-    document.getElementById(
-        "focusUrl"
-    );
+// =====================================================
+// QAZAQVOICE AI
+// REAL-TIME VIDEO DUBBING
+// =====================================================
 
 
-/*
-    Навигация
-*/
+// =====================================================
+// ELEMENTS
+// =====================================================
 
-focusUrl.addEventListener(
-    "click",
-    () => {
+const startButton =
+    document.getElementById("startDubbing");
 
-        document
-            .getElementById("translate")
-            .scrollIntoView({
-                behavior: "smooth"
-            });
+const stopButton =
+    document.getElementById("stopDubbing");
 
-        setTimeout(
-            () => youtubeUrl.focus(),
-            400
-        );
-    }
+const languageSelect =
+    document.getElementById("language");
+
+const statusElement =
+    document.getElementById("captureStatus");
+
+const livePanel =
+    document.getElementById("livePanel");
+
+const transcriptElement =
+    document.getElementById("transcript");
+
+const translatedElement =
+    document.getElementById("translated");
+
+
+// =====================================================
+// STATE
+// =====================================================
+
+let stream = null;
+
+let mediaRecorder = null;
+
+let sessionId = null;
+
+let selectedLanguage = "kk";
+
+let isRecording = false;
+
+
+// =====================================================
+// INITIAL STATUS
+// =====================================================
+
+setStatus(
+    "● Дайын — дубляжды бастауға болады",
+    "ready"
 );
 
 
+// =====================================================
+// STATUS FUNCTION
+// =====================================================
 
-/*
-    Перевод
-*/
+function setStatus(
+    message,
+    type = "ready"
+) {
 
-translateButton.addEventListener(
-    "click",
-    async () => {
-
-        const url =
-            youtubeUrl.value.trim();
-
-        const targetLanguage =
-            language.value;
+    if (!statusElement) {
+        return;
+    }
 
 
-        if (!url) {
-
-            youtubeUrl.focus();
-
-            progressArea.style.display =
-                "block";
-
-            progressStatus.textContent =
-                "Вставьте ссылку на YouTube";
-
-            progressPercent.textContent =
-                "0%";
-
-            return;
-        }
+    statusElement.textContent =
+        message;
 
 
-        resultArea.classList.remove(
-            "show"
+    statusElement.classList.remove(
+        "active",
+        "error"
+    );
+
+
+    if (type === "active") {
+
+        statusElement.classList.add(
+            "active"
+        );
+
+    }
+
+
+    if (type === "error") {
+
+        statusElement.classList.add(
+            "error"
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// START DUBBING
+// =====================================================
+
+async function startDubbing() {
+
+    if (isRecording) {
+        return;
+    }
+
+
+    try {
+
+        selectedLanguage =
+            languageSelect
+                ? languageSelect.value
+                : "kk";
+
+
+        setStatus(
+            "● Дайындалып жатыр...",
+            "active"
         );
 
 
-        translateButton.disabled =
+        startButton.disabled =
             true;
 
 
-        progressArea.style.display =
-            "block";
+        // =================================================
+        // 1. CREATE SERVER SESSION
+        // =================================================
 
+        const sessionResponse =
+            await fetch(
+                "/api/dubbing/start",
+                {
+                    method: "POST",
 
-        progressFill.style.width =
-            "10%";
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-        progressPercent.textContent =
-            "10%";
+                    body: JSON.stringify({
 
-        progressStatus.textContent =
-            "Подключение к серверу...";
+                        language:
+                            selectedLanguage
 
-
-        try {
-
-            /*
-                Отправляем URL
-                на локальный Node.js
-            */
-
-            const response =
-                await fetch(
-                    "/api/translate",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-                                url,
-                                language:
-                                    targetLanguage
-                            })
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                const error =
-                    await response.json()
-                        .catch(() => null);
-
-                throw new Error(
-                    error?.error ||
-                    "Ошибка сервера"
-                );
-            }
-
-
-            /*
-                Читаем поток
-                прогресса
-            */
-
-            const reader =
-                response.body.getReader();
-
-            const decoder =
-                new TextDecoder();
-
-
-            let buffer = "";
-
-
-            while (true) {
-
-                const { value, done } =
-                    await reader.read();
-
-
-                if (done) {
-                    break;
-                }
-
-
-                buffer +=
-                    decoder.decode(
-                        value,
-                        {
-                            stream: true
-                        }
-                    );
-
-
-                const lines =
-                    buffer.split("\n");
-
-
-                buffer =
-                    lines.pop();
-
-
-                for (
-                    const line of lines
-                ) {
-
-                    if (
-                        !line.startsWith(
-                            "data:"
-                        )
-                    ) {
-
-                        continue;
-                    }
-
-
-                    const data =
-                        JSON.parse(
-                            line
-                                .replace(
-                                    "data:",
-                                    ""
-                                )
-                                .trim()
-                        );
-
-
-                    if (
-                        data.progress
-                    ) {
-
-                        progressFill.style.width =
-                            data.progress + "%";
-
-                        progressPercent.textContent =
-                            data.progress + "%";
-                    }
-
-
-                    if (
-                        data.status
-                    ) {
-
-                        progressStatus.textContent =
-                            data.status;
-                    }
-
-
-                    if (
-                        data.completed
-                    ) {
-
-                        progressFill.style.width =
-                            "100%";
-
-                        progressPercent.textContent =
-                            "100%";
-
-                        progressStatus.textContent =
-                            "Готово";
-
-
-                        resultVideo.src =
-                            data.video;
-
-
-                        downloadResult.href =
-                            data.video;
-
-
-                        resultArea.classList.add(
-                            "show"
-                        );
-                    }
+                    })
 
                 }
-
-            }
-
-
-        } catch (error) {
-
-            console.error(error);
+            );
 
 
-            progressStatus.textContent =
-                error.message ||
-                "Произошла ошибка";
+        if (!sessionResponse.ok) {
 
-
-            progressFill.style.width =
-                "0%";
-
-            progressPercent.textContent =
-                "0%";
+            throw new Error(
+                "Серверге қосылу мүмкін болмады"
+            );
 
         }
 
 
-        translateButton.disabled =
+        const sessionData =
+            await sessionResponse.json();
+
+
+        if (!sessionData.success) {
+
+            throw new Error(
+                sessionData.message ||
+                "Сессия ашылмады"
+            );
+
+        }
+
+
+        sessionId =
+            sessionData.sessionId;
+
+
+        console.log(
+            "Session:",
+            sessionId
+        );
+
+
+        // =================================================
+        // 2. REQUEST SCREEN / TAB CAPTURE
+        // =================================================
+
+        setStatus(
+            "● YouTube вкладкасын немесе экранды таңдаңыз...",
+            "active"
+        );
+
+
+        stream =
+            await navigator.mediaDevices
+                .getDisplayMedia({
+
+                    video: true,
+
+                    audio: true
+
+                });
+
+
+        // =================================================
+        // 3. CHECK AUDIO
+        // =================================================
+
+        const audioTracks =
+            stream.getAudioTracks();
+
+
+        if (
+            !audioTracks ||
+            audioTracks.length === 0
+        ) {
+
+            stopAllTracks();
+
+            throw new Error(
+                "Аудио алынбады. YouTube вкладкасын таңдағанда Share audio / Делиться звуком параметрін қосыңыз."
+            );
+
+        }
+
+
+        // =================================================
+        // 4. RECORDING
+        // =================================================
+
+        let mimeType =
+            "audio/webm;codecs=opus";
+
+
+        if (
+            !MediaRecorder.isTypeSupported(
+                mimeType
+            )
+        ) {
+
+            mimeType =
+                "audio/webm";
+
+        }
+
+
+        mediaRecorder =
+            new MediaRecorder(
+                stream,
+                {
+                    mimeType
+                }
+            );
+
+
+        // =================================================
+        // 5. AUDIO DATA
+        // =================================================
+
+        mediaRecorder.ondataavailable =
+            async (event) => {
+
+                if (
+                    !event.data ||
+                    event.data.size === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                await sendAudioChunk(
+                    event.data
+                );
+
+            };
+
+
+        // =================================================
+        // 6. RECORDER STOP
+        // =================================================
+
+        mediaRecorder.onstop =
+            () => {
+
+                console.log(
+                    "MediaRecorder stopped"
+                );
+
+            };
+
+
+        // =================================================
+        // 7. USER STOPS SCREEN SHARING
+        // =================================================
+
+        stream
+            .getVideoTracks()
+            .forEach(track => {
+
+                track.onended =
+                    () => {
+
+                        if (
+                            isRecording
+                        ) {
+
+                            stopDubbing();
+
+                        }
+
+                    };
+
+            });
+
+
+        // =================================================
+        // 8. START
+        // =================================================
+
+        mediaRecorder.start(
+            1000
+        );
+
+
+        isRecording =
+            true;
+
+
+        // =================================================
+        // UI
+        // =================================================
+
+        startButton.style.display =
+            "none";
+
+
+        stopButton.style.display =
+            "block";
+
+
+        if (livePanel) {
+
+            livePanel.classList.add(
+                "active"
+            );
+
+        }
+
+
+        if (transcriptElement) {
+
+            transcriptElement.textContent =
+                "Listening...";
+
+        }
+
+
+        if (translatedElement) {
+
+            translatedElement.textContent =
+                "Қазақша дубляж дайындалуда...";
+
+        }
+
+
+        setStatus(
+            "● LIVE — YouTube дыбысы қабылданып жатыр",
+            "active"
+        );
+
+
+        console.log(
+            "QazaqVoice recording started"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        isRecording =
             false;
+
+
+        stopAllTracks();
+
+
+        startButton.disabled =
+            false;
+
+
+        startButton.style.display =
+            "block";
+
+
+        stopButton.style.display =
+            "none";
+
+
+        if (livePanel) {
+
+            livePanel.classList.remove(
+                "active"
+            );
+
+        }
+
+
+        setStatus(
+            "❌ " + error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// SEND AUDIO CHUNK
+// =====================================================
+
+async function sendAudioChunk(
+    blob
+) {
+
+    if (!sessionId) {
+        return;
+    }
+
+
+    try {
+
+        const base64 =
+            await blobToBase64(
+                blob
+            );
+
+
+        await fetch(
+            "/api/dubbing/audio",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    sessionId,
+
+                    audio: base64
+
+                })
+
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Audio upload error:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// BLOB → BASE64
+// =====================================================
+
+function blobToBase64(
+    blob
+) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onloadend =
+                () => {
+
+                    const result =
+                        reader.result;
+
+
+                    const base64 =
+                        result.split(
+                            ","
+                        )[1];
+
+
+                    resolve(
+                        base64
+                    );
+
+                };
+
+
+            reader.onerror =
+                reject;
+
+
+            reader.readAsDataURL(
+                blob
+            );
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// STOP DUBBING
+// =====================================================
+
+async function stopDubbing() {
+
+    if (!isRecording && !sessionId) {
+        return;
+    }
+
+
+    isRecording =
+        false;
+
+
+    // =================================================
+    // STOP RECORDER
+    // =================================================
+
+    if (
+        mediaRecorder &&
+        mediaRecorder.state !== "inactive"
+    ) {
+
+        mediaRecorder.stop();
+
+    }
+
+
+    mediaRecorder =
+        null;
+
+
+    // =================================================
+    // STOP STREAM
+    // =================================================
+
+    stopAllTracks();
+
+
+    // =================================================
+    // SERVER
+    // =================================================
+
+    if (sessionId) {
+
+        try {
+
+            await fetch(
+                "/api/dubbing/stop",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        sessionId
+
+                    })
+
+                }
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                error
+            );
+
+        }
+
+    }
+
+
+    sessionId =
+        null;
+
+
+    // =================================================
+    // UI
+    // =================================================
+
+    startButton.disabled =
+        false;
+
+
+    startButton.style.display =
+        "block";
+
+
+    stopButton.style.display =
+        "none";
+
+
+    if (livePanel) {
+
+        livePanel.classList.remove(
+            "active"
+        );
+
+    }
+
+
+    setStatus(
+        "● Дайын — дубляжды қайта бастауға болады",
+        "ready"
+    );
+
+
+    console.log(
+        "QazaqVoice stopped"
+    );
+
+}
+
+
+// =====================================================
+// STOP ALL MEDIA TRACKS
+// =====================================================
+
+function stopAllTracks() {
+
+    if (!stream) {
+        return;
+    }
+
+
+    stream
+        .getTracks()
+        .forEach(track => {
+
+            track.stop();
+
+        });
+
+
+    stream =
+        null;
+
+}
+
+
+// =====================================================
+// BUTTON EVENTS
+// =====================================================
+
+if (startButton) {
+
+    startButton.addEventListener(
+        "click",
+        startDubbing
+    );
+
+}
+
+
+if (stopButton) {
+
+    stopButton.addEventListener(
+        "click",
+        stopDubbing
+    );
+
+}
+
+
+// =====================================================
+// LANGUAGE CHANGE
+// =====================================================
+
+if (languageSelect) {
+
+    languageSelect.addEventListener(
+        "change",
+        () => {
+
+            selectedLanguage =
+                languageSelect.value;
+
+
+            console.log(
+                "Language:",
+                selectedLanguage
+            );
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// PAGE EXIT
+// =====================================================
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        stopAllTracks();
+
     }
 );
+
+
+// =====================================================
+// SERVER STATUS CHECK
+// =====================================================
+
+async function checkServer() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/status"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Server unavailable"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "QazaqVoice server:",
+            data
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "QazaqVoice server not available"
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// INITIALIZE
+// =====================================================
+
+checkServer();
