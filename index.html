@@ -126,6 +126,7 @@
 
             font-weight: 700;
             font-size: 13px;
+            text-decoration: none;
         }
 
         /* =========================
@@ -581,6 +582,7 @@
             border: 0;
 
             font-weight: 800;
+            font-size: 15px;
 
             transition:
                 transform 0.2s,
@@ -593,7 +595,7 @@
         }
 
         .stop-button {
-            background: #2b2d35;
+            background: #ff4d4d;
             color: white;
         }
 
@@ -638,6 +640,8 @@
         .live-title {
             font-size: 13px;
             font-weight: 800;
+            display: flex;
+            align-items: center;
         }
 
         .live-dot {
@@ -656,19 +660,9 @@
         }
 
         @keyframes pulse {
-
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
-
-            100% {
-                opacity: 1;
-            }
-
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
         }
 
         .transcript {
@@ -780,49 +774,14 @@
         ========================= */
 
         @media (max-width: 850px) {
-
-            nav {
-                display: none;
-            }
-
-            .hero {
-                grid-template-columns: 1fr;
-
-                gap: 45px;
-
-                padding-top: 70px;
-            }
-
-            .pipeline {
-                grid-template-columns: 1fr;
-            }
-
-            .pipeline-arrow {
-                display: none;
-            }
-
-            .steps {
-                grid-template-columns: 1fr;
-            }
-
-            .language-row {
-                flex-direction: column;
-
-                align-items: stretch;
-
-                gap: 12px;
-            }
-
-            .language-row select {
-                width: 100%;
-            }
-
-            footer {
-                flex-direction: column;
-
-                gap: 10px;
-            }
-
+            nav { display: none; }
+            .hero { grid-template-columns: 1fr; gap: 45px; padding-top: 70px; }
+            .pipeline { grid-template-columns: 1fr; }
+            .pipeline-arrow { display: none; }
+            .steps { grid-template-columns: 1fr; }
+            .language-row { flex-direction: column; align-items: stretch; gap: 12px; }
+            .language-row select { width: 100%; }
+            footer { flex-direction: column; gap: 10px; }
         }
 
     </style>
@@ -831,293 +790,180 @@
 
 <body>
 
-
-<!-- =========================
-     HEADER
-========================= -->
-
+<!-- HEADER -->
 <header class="header">
-
     <div class="logo">
-
-        <div class="logo-icon">
-            QV
-        </div>
-
-        <span>
-            QazaqVoice AI
-        </span>
-
+        <div class="logo-icon">QV</div>
+        <span>QazaqVoice AI</span>
     </div>
 
-
     <nav>
-
-        <a href="#translator">
-            Дубляж
-        </a>
-
-        <a href="#how">
-            Как работает
-        </a>
-
+        <a href="#translator">Дубляж</a>
+        <a href="#how">Как работает</a>
     </nav>
 
-
-    <a
-        href="#translator"
-        class="header-button"
-    >
-        Начать
-    </a>
-
+    <a href="#translator" class="header-button">Начать</a>
 </header>
-
-
 
 <main>
 
-
-<!-- =========================
-     HERO
-========================= -->
-
+<!-- HERO -->
 <section class="hero">
-
     <div>
-
-        <div class="label">
-            REAL-TIME AI DUBBING
-        </div>
-
-
-        <h1>
-
-            Смотри видео
-            <span>
-                на своём языке
-            </span>
-
-        </h1>
-
-
+        <div class="label">REAL-TIME AI DUBBING</div>
+        <h1>Смотри видео <span>на своём языке</span></h1>
         <p class="hero-description">
-
-            QazaqVoice AI слушает речь в видео,
-            распознаёт её, переводит и создаёт
-            дубляж на выбранном языке.
-
-            Без скачивания видео.
-
+            QazaqVoice AI слушает речь в видео, распознаёт её, переводит и создаёт дубляж на выбранном языке. Без скачивания видео.
         </p>
 
-
         <div class="hero-buttons">
-
-            <a
-                href="#translator"
-                class="primary-button"
-            >
-                🔴 Начать дубляж
-            </a>
-
-
-            <a
-                href="#how"
-                class="secondary-button"
-            >
-                Как это работает
-            </a>
-
+            <a href="#translator" class="primary-button">🔴 Начать дубляж</a>
+            <a href="#how" class="secondary-button">Как это работает</a>
         </div>
-
     </div>
-
-
 
     <div class="preview">
-
         <div class="preview-top">
-
-            <span>
-                QAZAQVOICE AI
-            </span>
-
-            <span class="online">
-                ● READY
-            </span>
-
+            <span>QAZAQVOICE AI</span>
+            <span class="online">● READY</span>
         </div>
-
-
         <div class="preview-screen">
-
-            <div class="preview-play">
-                ▶
-            </div>
-
+            <div class="preview-play">▶</div>
             <div class="wave"></div>
-
         </div>
-
-
         <div class="preview-bottom">
-
-            <span>
-                English
-            </span>
-
-            <strong>
-                →
-            </strong>
-
-            <span>
-                Қазақша
-            </span>
-
+            <span>English</span>
+            <strong>→</strong>
+            <span>Қазақша</span>
         </div>
-
     </div>
-
 </section>
 
-
-
-<!-- =========================
-     TRANSLATOR
-========================= -->
-
-<section
-    class="translator-section"
-    id="translator"
->
-
+<!-- TRANSLATOR -->
+<section class="translator-section" id="translator">
     <div class="section-header">
-
         <div>
-
-            <div class="label">
-                LIVE TRANSLATOR
-            </div>
-
-            <h2>
-                Real-Time дубляж
-            </h2>
-
+            <div class="label">LIVE TRANSLATOR</div>
+            <h2>Real-Time дубляж</h2>
         </div>
-
-
-        <div class="local-ai">
-            ● AI READY
-        </div>
-
+        <div class="local-ai">● AI READY</div>
     </div>
-
-
 
     <div class="translator-box">
 
-
         <!-- CAPTURE -->
-
         <div class="capture-box">
-
-            <div class="capture-icon">
-                🎙️
-            </div>
-
-
+            <div class="capture-icon">🎙️</div>
             <div class="capture-content">
-
-                <h3>
-                    Экрандағы видеоны дубляждау
-                </h3>
-
+                <h3>Экрандағы видеоны дубляждау</h3>
                 <p>
-                    YouTube немесе басқа видеоны ашыңыз.
-                    «Начать дубляж» батырмасын басып,
-                    видео тұрған вкладканы таңдаңыз.
+                    YouTube немесе басқа видеоны ашыңыз. «Начать дубляж» батырмасын басып, видео тұрған вкладканы таңдаңыз.
                 </p>
-
             </div>
-
         </div>
-
-
 
         <!-- LANGUAGE -->
-
         <div class="language-row">
-
-            <label>
-                Дубляж тілі
-            </label>
-
-
+            <label>Дубляж тілі</label>
             <select id="language">
-
-                <option value="kk">
-                    🇰🇿 Қазақша
-                </option>
-
-                <option value="ru">
-                    🇷🇺 Русский
-                </option>
-
-                <option value="en">
-                    🇬🇧 English
-                </option>
-
-                <option value="de">
-                    🇩🇪 Deutsch
-                </option>
-
-                <option value="fr">
-                    🇫🇷 Français
-                </option>
-
-                <option value="es">
-                    🇪🇸 Español
-                </option>
-
+                <option value="kk">🇰🇿 Қазақша</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="es">🇪🇸 Español</option>
             </select>
-
         </div>
 
-
-
         <!-- PIPELINE -->
-
         <div class="pipeline">
-
-
             <div class="pipeline-item">
-
-                <span>
-                    01
-                </span>
-
-                <strong>
-                    Audio Capture
-                </strong>
-
-                <small>
-                    Видео дыбысы
-                </small>
-
+                <span>01</span>
+                <strong>Audio Capture</strong>
+                <small>Видео дыбысы</small>
             </div>
-
-
-            <div class="pipeline-arrow">
-                →
-            </div>
-
-
+            <div class="pipeline-arrow">→</div>
             <div class="pipeline-item">
+                <span>02</span>
+                <strong>Whisper AI</strong>
+                <small>Мәтінге айналдыру</small>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-item">
+                <span>03</span>
+                <strong>Translation</strong>
+                <small>Аударма</small>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-item">
+                <span>04</span>
+                <strong>Live Dubbing</strong>
+                <small>Нәтиже</small>
+            </div>
+        </div>
 
-                <span>
-                    02
-                </span>
+        <!-- STATUS -->
+        <div id="captureStatus" class="status">
+            ● Дайын — дубляжды бастауға болады
+        </div>
 
-                <strong>
-                    Whisper
+        <!-- CONTROL BUTTONS -->
+        <button id="startDubbing" class="start-button">
+            🔴 Начать дубляж
+        </button>
+
+        <button id="stopDubbing" class="stop-button" style="display: none;">
+            ⏹ Дубляжды тоқтату
+        </button>
+
+        <!-- LIVE PANEL -->
+        <div id="livePanel" class="live-panel">
+            <div class="live-header">
+                <div class="live-title">
+                    <span class="live-dot"></span>
+                    LIVE TRANSCRIPT
+                </div>
+            </div>
+            <div id="transcript" class="transcript">
+                Listening...
+            </div>
+            <div id="translated" class="transcript translated">
+                Қазақша дубляж дайындалуда...
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+    <div class="label">PROCESS</div>
+    <h2>Как это работает</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">01</div>
+            <h3>Выбор вкладки</h3>
+            <p>Браузер захватывает аудиопоток выбранной вкладки с YouTube или другого сервиса.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">02</div>
+            <h3>Обработка Whisper</h3>
+            <p>Python сервер и модель faster-whisper преобразуют живой звук в текст.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">03</div>
+            <h3>Мгновенный перевод</h3>
+            <p>Текст переводится на выбранный вами язык и выводится на экран в реальном времени.</p>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<footer>
+    <div>QazaqVoice AI © 2026</div>
+    <div>Real-Time Video Dubbing MVP</div>
+</footer>
+
+</body>
+</html>
