@@ -1,26 +1,42 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { exec } = require("child_process");
+const { exec } = require("child_process");const express = require("express");
+const path = require("path");
+const fs = require("fs");
+const { exec, spawn } = require("child_process");
 
 const app = express();
 const PORT = 3000;
 const ROOT = __dirname;
+const DOWNLOADS_DIR = path.join(ROOT, "downloads");
+
+if (!fs.existsSync(DOWNLOADS_DIR)) {
+    fs.mkdirSync(DOWNLOADS_DIR);
+}
 
 // Үлкен аудио файлдарды қабылдау үшін лимитті көтереміз
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.static(ROOT));
+app.use("/downloads", express.static(DOWNLOADS_DIR));
 
 // Белсенді аудио ағындарын сақтауға арналған объект
 const activeStreams = {};
+
+// Сілтеме арқылы дубляж тапсырмаларының статусын сақтау
+const linkJobs = {};
 
 // Сервер статусы
 app.get("/api/status", (req, res) => {
     res.json({ server: true, status: "ready" });
 });
 
-// Дубляж сессиясын бастау
+
+// =====================================================
+// 1) НАҚТЫ УАҚЫТТАҒЫ ЭКРАН/ВКЛАДКА ДУБЛЯЖЫ
+// =====================================================
+
 app.post("/api/dubbing/start", (req, res) => {
     const sessionId = "session_" + Date.now();
     const sessionFile = path.join(ROOT, `${sessionId}.webm`);
@@ -34,7 +50,6 @@ app.post("/api/dubbing/start", (req, res) => {
     res.json({ success: true, sessionId });
 });
 
-// Аудио бөлшектерін (chunks) қабылдап жазу
 app.post("/api/dubbing/audio", (req, res) => {
     const { sessionId, audio } = req.body;
 
@@ -52,7 +67,6 @@ app.post("/api/dubbing/audio", (req, res) => {
     }
 });
 
-// Дубляжды тоқтату, Python арқылы мәтінге айналдыру және аудару
 app.post("/api/dubbing/stop", (req, res) => {
     const { sessionId, targetLang } = req.body;
 
@@ -61,8 +75,6 @@ app.post("/api/dubbing/stop", (req, res) => {
     }
 
     const session = activeStreams[sessionId];
-
-    // Клиент тіл жібермесе, әдепкі бойынша қазақшаға аударамыз
     const lang = targetLang || "kk";
 
     session.stream.end(async () => {
@@ -71,14 +83,12 @@ app.post("/api/dubbing/stop", (req, res) => {
 
         const targetWav = path.join(ROOT, "test.wav");
 
-        // Жазылған файлды test.wav етіп көшіреміз (Python оқуы үшін)
         fs.copyFile(session.filePath, targetWav, (err) => {
             if (err) {
                 console.error("Файлды көшіру қатесі:", err);
             }
         });
 
-        // Python скриптін мақсатты тілмен бірге іске қосамыз
         exec(`python test.py ${lang}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Python қатесі: ${error}`);
@@ -93,9 +103,7 @@ app.post("/api/dubbing/stop", (req, res) => {
             let language = null;
 
             if (fs.existsSync(resultPath)) {
-
                 const raw = fs.readFileSync(resultPath, "utf8");
-
                 try {
                     const parsed = JSON.parse(raw);
                     text = parsed.text;
@@ -104,15 +112,8 @@ app.post("/api/dubbing/stop", (req, res) => {
                 } catch (parseError) {
                     console.error("JSON оқу қатесі:", parseError);
                 }
-
-            } else {
-                console.error("result.json табылмады");
             }
 
-            console.log("Танылған мәтін:", text);
-            console.log("Аударма:", translated);
-
-            // Мәтінді және аударманы клиентке қайтарамыз
             res.json({
                 success: true,
                 sessionId,
@@ -124,6 +125,97 @@ app.post("/api/dubbing/stop", (req, res) => {
         });
     });
 });
+
+
+// =====================================================
+// 2) YOUTUBE СІЛТЕМЕСІ АРҚЫЛЫ ТОЛЫҚ ВИДЕО ДУБЛЯЖЫ
+// =====================================================
+
+// Дубляж тапсырмасын бастау (ұзаққа созылады, сондықтан фондық job ретінде)
+app.post("/api/dub-link/start", (req, res) => {
+
+    const { url, targetLang } = req.body;
+
+    if (!url) {
+        return res.status(400).json({ success: false, error: "URL берілмеді" });
+    }
+
+    const jobId = "job_" + Date.now();
+    const lang = targetLang || "kk";
+
+    linkJobs[jobId] = {
+        status: "starting",
+        message: "Басталуда...",
+        file: null,
+        segments: null,
+        error: null
+    };
+
+    const child = spawn("python", ["dub_youtube.py", url, lang]);
+
+    child.stdout.on("data", (data) => {
+
+        const lines = data.toString().split("\n").filter(Boolean);
+
+        for (const line of lines) {
+
+            try {
+
+                const parsed = JSON.parse(line);
+
+                linkJobs[jobId].status = parsed.status;
+                linkJobs[jobId].message = parsed.message || "";
+
+                if (parsed.status === "completed") {
+                    linkJobs[jobId].file = parsed.file;
+                    linkJobs[jobId].segments = parsed.segments;
+                }
+
+                if (parsed.status === "error") {
+                    linkJobs[jobId].error = parsed.message;
+                }
+
+                console.log(`[${jobId}]`, parsed.status, parsed.message || "");
+
+            } catch (e) {
+                // JSON емес шығыс жолдары (мыс. кітапхана логтары) — елемей өтеміз
+            }
+        }
+    });
+
+    child.stderr.on("data", (data) => {
+        console.error(`[${jobId}] stderr:`, data.toString());
+    });
+
+    child.on("close", (code) => {
+        if (code !== 0 && linkJobs[jobId].status !== "completed") {
+            linkJobs[jobId].status = "error";
+            linkJobs[jobId].error = linkJobs[jobId].error || "Белгісіз қате";
+        }
+    });
+
+    res.json({ success: true, jobId });
+});
+
+// Тапсырманың ағымдағы статусын сұрау (клиент осыны периодты түрде шақырады)
+app.get("/api/dub-link/status/:jobId", (req, res) => {
+
+    const job = linkJobs[req.params.jobId];
+
+    if (!job) {
+        return res.status(404).json({ success: false, error: "Тапсырма табылмады" });
+    }
+
+    res.json({
+        success: true,
+        status: job.status,
+        message: job.message,
+        file: job.file ? `/downloads/${job.file}` : null,
+        segments: job.segments,
+        error: job.error
+    });
+});
+
 
 // Серверді іске қосу
 app.listen(PORT, () => {
