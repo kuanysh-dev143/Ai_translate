@@ -3,7 +3,11 @@ import numpy as np
 import wave
 import os
 import time
+import asyncio
 from faster_whisper import WhisperModel
+from deep_translator import GoogleTranslator
+import edge_tts
+from playsound import playsound
 
 
 # ==============================
@@ -13,6 +17,9 @@ from faster_whisper import WhisperModel
 MODEL_SIZE = "small"
 SAMPLE_RATE = 16000
 CHUNK_SECONDS = 5
+
+TARGET_LANG = "kk"                 # аударма тілі: kk, ru, en т.б.
+TTS_VOICE = "kk-KZ-AigerinNeural"  # дауыс: ru-RU-SvetlanaNeural / en-US-JennyNeural
 
 
 # ==============================
@@ -75,6 +82,24 @@ except Exception as error:
         print(mic)
 
     raise
+
+
+# ==============================
+# TTS FUNCTION
+# ==============================
+
+async def speak(text, filename="translated_voice.mp3"):
+
+    communicate = edge_tts.Communicate(text, TTS_VOICE)
+
+    await communicate.save(filename)
+
+    playsound(filename)
+
+    try:
+        os.remove(filename)
+    except:
+        pass
 
 
 print("================================")
@@ -160,7 +185,7 @@ with microphone.recorder(
 
 
             # ==============================
-            # WHISPER
+            # WHISPER (SPEECH -> TEXT)
             # ==============================
 
             segments, info = model.transcribe(
@@ -186,12 +211,48 @@ with microphone.recorder(
 
             if result:
 
+                # ==============================
+                # TRANSLATION
+                # ==============================
+
+                translated = None
+
+                try:
+
+                    translated = GoogleTranslator(
+                        source="auto",
+                        target=TARGET_LANG
+                    ).translate(result)
+
+                except Exception as error:
+
+                    print("Аударма қатесі:", error)
+
+
                 print()
                 print("────────────────────────")
                 print("LANGUAGE:", info.language)
                 print("TEXT:", result)
+                print("TRANSLATED:", translated)
                 print("────────────────────────")
                 print()
+
+
+                # ==============================
+                # TEXT -> SPEECH
+                # ==============================
+
+                if translated:
+
+                    try:
+
+                        asyncio.run(
+                            speak(translated)
+                        )
+
+                    except Exception as error:
+
+                        print("Дауыстау қатесі:", error)
 
 
             # Delete temporary file
