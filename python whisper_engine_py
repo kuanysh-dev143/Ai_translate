@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 
 from faster_whisper import WhisperModel
+from deep_translator import GoogleTranslator
 
 
 MODEL_SIZE = "small"
@@ -69,7 +70,29 @@ def convert_to_wav(input_file):
     return output_file
 
 
-def transcribe(audio_file):
+def translate_text(text, target_lang):
+
+    if not text:
+        return ""
+
+    try:
+
+        return GoogleTranslator(
+            source="auto",
+            target=target_lang
+        ).translate(text)
+
+    except Exception as error:
+
+        print(json.dumps({
+            "status": "translate_error",
+            "error": str(error)
+        }, ensure_ascii=False), flush=True)
+
+        return ""
+
+
+def transcribe(audio_file, target_lang):
 
     segments, info = model.transcribe(
         audio_file,
@@ -79,6 +102,7 @@ def transcribe(audio_file):
 
     result_segments = []
     full_text = []
+    full_translated = []
 
     for segment in segments:
 
@@ -87,17 +111,25 @@ def transcribe(audio_file):
         if not text:
             continue
 
+        translated = translate_text(
+            text,
+            target_lang
+        )
+
         result_segments.append({
             "start": round(segment.start, 2),
             "end": round(segment.end, 2),
-            "text": text
+            "text": text,
+            "translated": translated
         })
 
         full_text.append(text)
+        full_translated.append(translated)
 
         print(json.dumps({
             "status": "transcribing",
             "text": text,
+            "translated": translated,
             "start": segment.start,
             "end": segment.end
         }, ensure_ascii=False), flush=True)
@@ -105,7 +137,9 @@ def transcribe(audio_file):
     return {
         "language": info.language,
         "language_probability": info.language_probability,
+        "target_language": target_lang,
         "text": " ".join(full_text),
+        "translated_text": " ".join(full_translated),
         "segments": result_segments
     }
 
@@ -123,6 +157,9 @@ def main():
 
 
     input_file = sys.argv[1]
+
+    # Мақсатты тіл: python script.py file.mp4 kk
+    target_lang = sys.argv[2] if len(sys.argv) > 2 else "kk"
 
 
     if not os.path.exists(input_file):
@@ -158,7 +195,8 @@ def main():
 
 
         result = transcribe(
-            wav_file
+            wav_file,
+            target_lang
         )
 
 
