@@ -466,6 +466,22 @@
             outline: none;
         }
 
+        .language-row input[type="url"] {
+            flex: 1;
+
+            margin-left: 15px;
+
+            padding: 10px 13px;
+
+            border: 1px solid #343741;
+            border-radius: 9px;
+
+            background: #181a20;
+            color: white;
+
+            outline: none;
+        }
+
         /* =========================
            PIPELINE
         ========================= */
@@ -780,7 +796,8 @@
             .pipeline-arrow { display: none; }
             .steps { grid-template-columns: 1fr; }
             .language-row { flex-direction: column; align-items: stretch; gap: 12px; }
-            .language-row select { width: 100%; }
+            .language-row select,
+            .language-row input[type="url"] { width: 100%; margin-left: 0; }
             footer { flex-direction: column; gap: 10px; }
         }
 
@@ -799,6 +816,7 @@
 
     <nav>
         <a href="#translator">Дубляж</a>
+        <a href="#link-dubbing">Сілтеме арқылы</a>
         <a href="#how">Как работает</a>
     </nav>
 
@@ -930,6 +948,64 @@
             <div id="translated" class="transcript translated">
                 Қазақша дубляж дайындалуда...
             </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- LINK DUBBING -->
+<section class="translator-section" id="link-dubbing">
+    <div class="section-header">
+        <div>
+            <div class="label">FULL VIDEO DUBBING</div>
+            <h2>Сілтеме арқылы дубляж</h2>
+        </div>
+        <div class="local-ai">● AI READY</div>
+    </div>
+
+    <div class="translator-box">
+
+        <div class="capture-box">
+            <div class="capture-icon">🔗</div>
+            <div class="capture-content">
+                <h3>YouTube сілтемесін қойыңыз</h3>
+                <p>
+                    Видео сілтемесін қойып, жоғарыдағы тілді таңдап, батырманы басыңыз. Жүйе видеоны жүктеп алып, толық жаңа дауыспен дубляждап шығарады.
+                </p>
+            </div>
+        </div>
+
+        <div class="language-row">
+            <label>YouTube сілтемесі</label>
+            <input
+                type="url"
+                id="youtubeUrlInput"
+                placeholder="https://www.youtube.com/watch?v=..."
+            >
+        </div>
+
+        <div id="linkStatus" class="status">
+            ● Сілтемені қойып, дубляждауды бастаңыз
+        </div>
+
+        <button id="startLinkDubbing" class="start-button">
+            🎬 Толық видеоны дубляждау
+        </button>
+
+        <div id="linkResultPanel" class="live-panel">
+            <div class="live-header">
+                <div class="live-title">Дайын видео</div>
+            </div>
+            <video id="dubbedVideo" controls style="width: 100%; border-radius: 9px;"></video>
+            <a
+                id="downloadDubbedVideo"
+                href="#"
+                download
+                class="secondary-button"
+                style="display: inline-block; margin-top: 15px; text-align: center;"
+            >
+                ⬇ Жүктеп алу
+            </a>
         </div>
 
     </div>
