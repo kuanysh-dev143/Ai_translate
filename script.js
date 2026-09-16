@@ -144,24 +144,37 @@ async function stopDubbing() {
     if (sessionId) {
         try {
             setStatus("● Өңделіп жатыр (Python Whisper)...", "active");
-            
+
             const response = await fetch("/api/dubbing/stop", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId })
+                body: JSON.stringify({
+                    sessionId,
+                    targetLang: selectedLanguage   // <-- мақсатты тілді серверге жібереміз
+                })
             });
 
             const data = await response.json();
 
-            // Серверден қайтқан мәтінді экранға шығарамыз
-            if (data.success && data.text) {
+            // Серверден қайтқан түпнұсқа мәтін мен аударманы бөлек шығарамыз
+            if (data.success) {
+
                 if (transcriptElement) {
-                    transcriptElement.textContent = data.text;
+                    transcriptElement.textContent = data.text || "Мәтін табылмады";
                 }
+
                 if (translatedElement) {
-                    translatedElement.textContent = "Нәтиже: " + data.text;
+                    translatedElement.textContent = data.translated
+                        ? data.translated
+                        : "Аударма алынбады";
                 }
+
+                setStatus("● Дайын", "ready");
+
+            } else {
+                setStatus("❌ " + (data.error || "Белгісіз қате"), "error");
             }
+
         } catch (error) {
             console.error(error);
             setStatus("❌ Қате орын алды", "error");
@@ -173,7 +186,6 @@ async function stopDubbing() {
     startButton.style.display = "block";
     stopButton.style.display = "none";
     if (livePanel) livePanel.classList.remove("active");
-    setStatus("● Дайын — дубляжды қайта бастауға болады", "ready");
 }
 
 function stopAllTracks() {
