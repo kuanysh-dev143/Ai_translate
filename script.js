@@ -204,3 +204,130 @@ if (languageSelect) {
 }
 
 window.addEventListener("beforeunload", () => { stopAllTracks(); });
+
+
+// =====================================================
+// YOUTUBE СІЛТЕМЕСІ АРҚЫЛЫ ТОЛЫҚ ВИДЕО ДУБЛЯЖЫ
+// =====================================================
+
+const youtubeUrlInput = document.getElementById("youtubeUrlInput");
+const startLinkButton = document.getElementById("startLinkDubbing");
+const linkStatusElement = document.getElementById("linkStatus");
+const linkResultPanel = document.getElementById("linkResultPanel");
+const dubbedVideoElement = document.getElementById("dubbedVideo");
+const downloadDubbedVideoLink = document.getElementById("downloadDubbedVideo");
+
+let linkPollInterval = null;
+
+const linkStatusMessages = {
+    starting: "● Басталуда...",
+    downloading: "● Видео жүктелуде...",
+    extracting: "● Дыбыс бөлінуде...",
+    loading_model: "● Whisper моделі жүктелуде...",
+    transcribing: "● Сөз танылуда...",
+    segment: "● Сөз танылуда...",
+    synthesizing: "● Жаңа дауыс жасалуда...",
+    muxing: "● Видеомен қосылуда..."
+};
+
+function setLinkStatus(message, type = "ready") {
+    if (!linkStatusElement) return;
+    linkStatusElement.textContent = message;
+    linkStatusElement.classList.remove("active", "error");
+    if (type === "active") linkStatusElement.classList.add("active");
+    if (type === "error") linkStatusElement.classList.add("error");
+}
+
+async function startLinkDubbing() {
+
+    const url = youtubeUrlInput ? youtubeUrlInput.value.trim() : "";
+
+    if (!url) {
+        setLinkStatus("❌ Алдымен сілтеме енгізіңіз", "error");
+        return;
+    }
+
+    const targetLang = languageSelect ? languageSelect.value : "kk";
+
+    startLinkButton.disabled = true;
+    if (linkResultPanel) linkResultPanel.classList.remove("active");
+    setLinkStatus("● Басталуда...", "active");
+
+    try {
+
+        const response = await fetch("/api/dub-link/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url, targetLang })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || "Тапсырма басталмады");
+        }
+
+        pollLinkStatus(data.jobId);
+
+    } catch (error) {
+        console.error(error);
+        setLinkStatus("❌ " + error.message, "error");
+        startLinkButton.disabled = false;
+    }
+}
+
+function pollLinkStatus(jobId) {
+
+    if (linkPollInterval) clearInterval(linkPollInterval);
+
+    linkPollInterval = setInterval(async () => {
+
+        try {
+
+            const response = await fetch(`/api/dub-link/status/${jobId}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || "Статус алынбады");
+            }
+
+            if (data.status === "completed") {
+
+                clearInterval(linkPollInterval);
+                linkPollInterval = null;
+
+                setLinkStatus("✅ Дайын!", "ready");
+                startLinkButton.disabled = false;
+
+                if (dubbedVideoElement && data.file) {
+                    dubbedVideoElement.src = data.file;
+                }
+                if (downloadDubbedVideoLink && data.file) {
+                    downloadDubbedVideoLink.href = data.file;
+                }
+                if (linkResultPanel) linkResultPanel.classList.add("active");
+
+            } else if (data.status === "error") {
+
+                clearInterval(linkPollInterval);
+                linkPollInterval = null;
+
+                setLinkStatus("❌ " + (data.error || "Белгісіз қате"), "error");
+                startLinkButton.disabled = false;
+
+            } else {
+
+                setLinkStatus(
+                    linkStatusMessages[data.status] || ("● " + (data.message || "Өңделуде...")),
+                    "active"
+                );
+            }
+
+        } catch (error) {
+            console.error("Link status poll error:", error);
+        }
+
+    }, 3000);
+}
+
+if (startLinkButton) startLinkButton.addEventListener("click", startLinkDubbing);
