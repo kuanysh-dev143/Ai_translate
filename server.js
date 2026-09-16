@@ -24,7 +24,7 @@ app.get("/api/status", (req, res) => {
 app.post("/api/dubbing/start", (req, res) => {
     const sessionId = "session_" + Date.now();
     const sessionFile = path.join(ROOT, `${sessionId}.webm`);
-    
+
     activeStreams[sessionId] = {
         filePath: sessionFile,
         stream: fs.createWriteStream(sessionFile)
@@ -37,7 +37,7 @@ app.post("/api/dubbing/start", (req, res) => {
 // Аудио бөлшектерін (chunks) қабылдап жазу
 app.post("/api/dubbing/audio", (req, res) => {
     const { sessionId, audio } = req.body;
-    
+
     if (!sessionId || !activeStreams[sessionId] || !audio) {
         return res.status(400).json({ success: false, error: "Қате сессия немесе аудио" });
     }
@@ -52,22 +52,25 @@ app.post("/api/dubbing/audio", (req, res) => {
     }
 });
 
-// Дубляжды тоқтату және Python арқылы мәтінге айналдыру
+// Дубляжды тоқтату, Python арқылы мәтінге айналдыру және аудару
 app.post("/api/dubbing/stop", (req, res) => {
-    const { sessionId } = req.body;
-    
+    const { sessionId, targetLang } = req.body;
+
     if (!sessionId || !activeStreams[sessionId]) {
         return res.status(400).json({ success: false, error: "Сессия табылмады" });
     }
 
     const session = activeStreams[sessionId];
-    
+
+    // Клиент тіл жібермесе, әдепкі бойынша қазақшаға аударамыз
+    const lang = targetLang || "kk";
+
     session.stream.end(async () => {
         delete activeStreams[sessionId];
         console.log(`Сессия аяқталды: ${sessionId}. Файл сақталды.`);
 
         const targetWav = path.join(ROOT, "test.wav");
-        
+
         // Жазылған файлды test.wav етіп көшіреміз (Python оқуы үшін)
         fs.copyFile(session.filePath, targetWav, (err) => {
             if (err) {
@@ -75,28 +78,48 @@ app.post("/api/dubbing/stop", (req, res) => {
             }
         });
 
-        // Python скриптін іске қосамыз
-        exec("python test.py", (error, stdout, stderr) => {
+        // Python скриптін мақсатты тілмен бірге іске қосамыз
+        exec(`python test.py ${lang}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Python қатесі: ${error}`);
+                console.error(`stderr: ${stderr}`);
                 return res.status(500).json({ success: false, error: "Python өңдеу қатесі" });
             }
 
-            // result.txt файлынан танылған мәтінді оқимыз
-            let transcriptText = "Мәтін табылмады";
-            const resultPath = path.join(ROOT, "result.txt");
-            
+            const resultPath = path.join(ROOT, "result.json");
+
+            let text = "Мәтін табылмады";
+            let translated = "";
+            let language = null;
+
             if (fs.existsSync(resultPath)) {
-                transcriptText = fs.readFileSync(resultPath, "utf8");
+
+                const raw = fs.readFileSync(resultPath, "utf8");
+
+                try {
+                    const parsed = JSON.parse(raw);
+                    text = parsed.text;
+                    translated = parsed.translated;
+                    language = parsed.language;
+                } catch (parseError) {
+                    console.error("JSON оқу қатесі:", parseError);
+                }
+
+            } else {
+                console.error("result.json табылмады");
             }
 
-            console.log("Python нәтижесі оқылды:", transcriptText);
+            console.log("Танылған мәтін:", text);
+            console.log("Аударма:", translated);
 
-            // Мәтінді клиентке қайтарамыз
+            // Мәтінді және аударманы клиентке қайтарамыз
             res.json({
                 success: true,
                 sessionId,
-                text: transcriptText
+                language,
+                targetLang: lang,
+                text,
+                translated
             });
         });
     });
