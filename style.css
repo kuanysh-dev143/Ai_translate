@@ -543,6 +543,27 @@ a {
     border-color: #60646f;
 }
 
+.language-row input[type="url"] {
+    flex: 1;
+
+    margin-left: 15px;
+
+    padding: 10px 13px;
+
+    border: 1px solid #343741;
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #17191f;
+    color: #ffffff;
+}
+
+.language-row input[type="url"]:focus {
+    border-color: #60646f;
+}
+
 
 /* =====================================================
    PIPELINE
