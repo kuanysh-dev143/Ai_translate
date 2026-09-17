@@ -86,7 +86,7 @@ app.post("/api/dubbing/stop", (req, res) => {
             }
         });
 
-        exec(`python test.py ${lang}`, (error, stdout, stderr) => {
+        exec(`python3 test.py ${lang}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Python қатесі: ${error}`);
                 console.error(`stderr: ${stderr}`);
@@ -148,7 +148,13 @@ app.post("/api/dub-link/start", (req, res) => {
         error: null
     };
 
-    const child = spawn("python", ["dub_youtube.py", url, lang]);
+    const child = spawn("python3", ["dub_youtube.py", url, lang]);
+
+    child.on("error", (spawnError) => {
+        console.error(`[${jobId}] spawn error:`, spawnError);
+        linkJobs[jobId].status = "error";
+        linkJobs[jobId].error = "Python процесі іске қосылмады: " + spawnError.message;
+    });
 
     child.stdout.on("data", (data) => {
 
@@ -180,14 +186,19 @@ app.post("/api/dub-link/start", (req, res) => {
         }
     });
 
+    let stderrBuffer = "";
+
     child.stderr.on("data", (data) => {
+        stderrBuffer += data.toString();
         console.error(`[${jobId}] stderr:`, data.toString());
     });
 
     child.on("close", (code) => {
         if (code !== 0 && linkJobs[jobId].status !== "completed") {
             linkJobs[jobId].status = "error";
-            linkJobs[jobId].error = linkJobs[jobId].error || "Белгісіз қате";
+            linkJobs[jobId].error =
+                linkJobs[jobId].error ||
+                (stderrBuffer ? stderrBuffer.slice(-500) : "Белгісіз қате (code " + code + ")");
         }
     });
 
@@ -213,6 +224,11 @@ app.get("/api/dub-link/status/:jobId", (req, res) => {
     });
 });
 
+
+// Серверді іске қосу
+app.listen(PORT, () => {
+    console.log(`Сервер жұмыс істеп тұр: http://localhost:${PORT}`);
+});
 
 // Серверді іске қосу
 app.listen(PORT, () => {
