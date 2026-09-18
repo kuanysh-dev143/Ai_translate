@@ -43,8 +43,16 @@ def download_video(url, job_id):
         "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
         "-o", output_template,
         "--no-playlist",
-        url
     ]
+
+    # Егер cookies.txt файлы жоба түбірінде тұрса, соны қолданамыз
+    # (YouTube-тың "Sign in to confirm you're not a bot" қатесін болдырмау үшін)
+    cookies_path = os.path.join(os.path.dirname(__file__), "cookies.txt")
+
+    if os.path.exists(cookies_path):
+        command.extend(["--cookies", cookies_path])
+
+    command.append(url)
 
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
